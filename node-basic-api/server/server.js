@@ -4,42 +4,29 @@
   - server.js
 */
 
-/*
-  set required environment variables
-*/
-// set some environment variables
-var env = process.env.NODE_ENV || 'development';
-// log current environment
-console.log('current env =', env);
 
-// check current environment
-if (env === 'development') {
-  process.env.PORT = 3030;
-  process.env.MONGODB_URI = 'mongodb://localhost:27017/NodeTodoApp';
-} else if (env === 'test') {
-  process.env.PORT = 3030;
-  process.env.MONGODB_URI = 'mongodb://localhost:27017/NodeTodoAppTester';
-}
 
 /*
-  require modules
+  require modules & locals
 */
-// npm - require installed modules
-// lodash js library - utilities
+
+// local - load config file
+require('./config/config')
+// npm - lodash js library - utilities
 const _ = require('lodash');
-// express web framework
+// npm - express web framework
 const express = require('express');
-// body-parser module
+// npm - body-parser module
 const bodyParser = require('body-parser');
-// ObjectID for validation
+// npm - ObjectID for validation
 const {ObjectID} = require('mongodb');
 
 // local - get mongoose property using ES6 destructuring - name of created local variable will match the property of the object
 var {mongoose} = require('./dbms/mongoose-config'); // require custom mongoose config created for app
-// Todo property for model
+// local - Todo property for model
 var {Todo} = require('./models/todo-model');
-// User propertu for model
-var {User} = require('./models/user-model.js');
+// local - User property for model
+var {User} = require('./models/user-model');
 
 // create express app
 var app = express();
