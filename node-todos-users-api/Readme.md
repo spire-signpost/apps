@@ -10,5 +10,5 @@ Features include,
   * users and authentication
   * security updates
 
-#### v0.1 -
+#### v0.1 - 
   *
