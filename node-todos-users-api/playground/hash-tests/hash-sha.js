@@ -22,7 +22,7 @@ var token = {
   hash: SHA256(JSON.stringify(data) + 'salted').toString()
 }
 
-// // inject attempt to hack token hash to test validation on server
+// inject attempt to hack token hash to test validation on server
 // token.data.id = 3;
 // token.hash = SHA256(JSON.stringify(token.data).toString());
 
