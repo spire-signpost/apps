@@ -36,7 +36,7 @@ const port = process.env.PORT;
 app.use(bodyParser.json());
 
 /*
-  API routes
+  API routes - TODOS
   - GET
   - POST
   - DELETE
@@ -156,6 +156,23 @@ app.patch('/todos/:id', (req, res) => {
   }).catch((error) => { // catch error
     res.status(400).send(); // send back error status - bad request code
   });
+});
+
+/*
+  API routes - USERS
+  - POST
+*/
+
+// POST route for adding a user - /users
+app.post('/users', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+  var user = new User(body);
+
+    user.save().then((user) => {
+      res.send(user);
+    }).catch((error) => {
+      res.status(400).send(error);
+    })
 });
 
 // set port for server
