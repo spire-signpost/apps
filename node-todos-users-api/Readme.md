@@ -35,7 +35,7 @@ Features include,
   * test with postman
 
 #### v0.5 - abstract authentication to middleware
-  * add new middle directory and authenticate file
+  * add new middleware directory and authenticate file
   * abstract authentication to separate function
   * call authenticate from private API route
   * test with postman
