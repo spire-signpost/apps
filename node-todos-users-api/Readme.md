@@ -28,7 +28,7 @@ Features include,
     * generate auth token
     * override json return for user object
 
-#### v0.4 - private route for users - GET
+#### v0.4 - add private GET route for users
   * add GET route for users to check their details
   * add authentication by validating token in header
   * add error handling for token errors, no user &c.
