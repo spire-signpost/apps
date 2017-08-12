@@ -168,8 +168,12 @@ app.post('/users', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
   var user = new User(body);
 
-    user.save().then((user) => {
-      res.send(user);
+    user.save().then(() => {
+      // call method from user model - use return token in promise chain...
+      return user.generateAuthToken();
+    }).then((token) => {
+      // send back user with the updated token...and send custom header for auth token
+      res.header('x-auth', token).send(user); // `x-...` in a header indicates a custom header...
     }).catch((error) => {
       res.status(400).send(error);
     })
