@@ -68,6 +68,31 @@ UserSchema.methods.generateAuthToken = function () {
   });
 };
 
+// model method for token authentication - statics defines method as a models method
+UserSchema.statics.findByToken = function (token) {
+  // user model = `this` binding - because this is a model method...
+  var User = this;
+  // store decoded jwt values
+  var decoded;
+
+  // catch any errors for verify()
+  try {
+    decoded = jwt.verify(token, 'salted'); // pass token to verify plus secret phrase for salting...
+
+  } catch (error) {
+    return new Promise((resolve, reject) => {
+      reject();
+    });
+  }
+
+  // return promise to query (i.e. in server.js) for requested user values
+  return User.findOne({
+    _id: decoded._id,
+    'tokens.token': token, //quotation marks required due to period in tokens.token
+    'tokens.access': 'auth'
+  });
+};
+
 var User = mongoose.model('User', UserSchema);
 
 // module export
