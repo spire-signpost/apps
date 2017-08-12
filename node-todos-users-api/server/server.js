@@ -23,8 +23,10 @@ const {ObjectID} = require('mongodb');
 var {mongoose} = require('./dbms/mongoose-config'); // require custom mongoose config created for app
 // Todo property for model
 var {Todo} = require('./models/todo-model');
-// User propertu for model
-var {User} = require('./models/user-model.js');
+// User property for model
+var {User} = require('./models/user-model');
+// require authenticate from local module
+var {authenticate} = require('./middleware/authenticate');
 
 // create express app
 var app = express();
@@ -164,24 +166,9 @@ app.patch('/todos/:id', (req, res) => {
   - POST
 */
 
-app.get('/users/me', (req, res) => {
-  // get token from header - req will sent for the returned header
-  var token = req.header('x-auth'); // key from the header is `x-auth`
-
-  // call user model method with token - check return promise for user
-  User.findByToken(token).then((user) => {
-    // check user return
-    if (!user) {
-      // reject promise - code execution stops and exits...
-      return Promise.reject();
-    }
-
-    // success - user authenticated token...
-    res.send(user);
-  }).catch((error) => {
-    // send back 401 status - error code
-    res.status(401).send();
-  });
+app.get('/users/me', authenticate, (req, res) => {
+  // send the user from the authenticated request
+  res.send(req.user);
 });
 
 // POST route for adding a user - /users
