@@ -12,6 +12,8 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 // require npm module - lodash
 const _ = require('lodash');
+// require npm module - bcrypt hashing and salting
+const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
     email: {
@@ -92,6 +94,28 @@ UserSchema.statics.findByToken = function (token) {
     'tokens.access': 'auth'
   });
 };
+
+// run some code before the schema executes save...e.g. hash passwords before save
+UserSchema.pre('save', function(next) {
+  // access document
+  var user = this;
+  // check if password is modified - if yes, then hash and salt is required
+  if (user.isModified('password')) {
+    // hash and salt password - before running save
+    bcrypt.genSalt(15, (error, salt) => { // generate salt
+      // hash password with salt
+      bcrypt.hash(user.password, salt, (error, hash) => {
+        // update user document with the hashed and salted password
+        user.password = hash;
+        // call next() to continue execution of schema - doc will be saved with hashed password...
+        next();
+      });
+    });
+  } else {
+    // if not modified - continue schema execution
+    next();
+  }
+});
 
 var User = mongoose.model('User', UserSchema);
 
