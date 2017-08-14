@@ -18,6 +18,7 @@ const {ObjectID} = require('mongodb'); // ObjectID property from MongoDB object
 // local files
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo-model');
+const {User} = require('./../models/user-model');
 const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
 // wipe users and then add dummy data for testing
@@ -26,10 +27,11 @@ beforeEach(populateUsers);
 beforeEach(populateTodos);
 
 /*
-  test routes
-  - GET with PARAMS
-  - DELETE with PARAMS
-  - PATCH with params
+  test routes - TODOS
+  - POST
+  - GET
+  - DELETE
+  - PATCH
 */
 
 // describe for the POST API route
@@ -220,4 +222,98 @@ describe('PATCH /todos/:id', () => {
       })
       .end(done);
   });
+});
+
+/*
+  test routes - USERS
+  - GET /users/me
+  - POST /users
+*/
+
+// test GET route for /users/me
+describe('GET /users/me', () => {
+  // test case - check user return for successful authentication...
+  it('should return user if authentication successful...', (done) => {
+    request(app)
+      .get('/users/me') // specify api route
+      .set('x-auth', users[0].tokens[0].token) // add custom header to request
+      .expect(200) // should return a 200 status code - OK
+      .expect((res) => {
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+        expect(res.body.email).toBe(users[0].email);
+      })
+      .end(done);
+  });
+
+  //test case - check for missing or false authentication - no x-auth header
+  it('should return an error code 401 for no authentication...', (done) => {
+    request(app)
+      .get('/users/me')
+      .expect(401) // should return a 401 status code
+      .expect((res) => {
+        expect(res.body).toEqual({}); // retun body should be empty - not another user's data &c.
+      })
+      .end(done);
+  });
+});
+
+// test POST route for /users
+describe('POST /users', () => {
+  //test case - check user created successfully
+  it('should create a new user', (done) => {
+    // set some dummy data for test case
+    var email = 'tester@test.com';
+    var password = 'abcdef1234';
+
+    request(app)
+      .post('/users') // POST request to /users API route
+      .send({email, password}) // send dummay data for a new user
+      .expect(200) // should return a 200 status code - OK
+      .expect((res) => {
+        expect(res.headers['x-auth']).toExist(); // check that x-auth exists in the response header
+        expect(res.body._id).toExist(); // check that body exists in response
+        expect(res.body.email).toBe(email); // check email matches expected email format &c.
+      })
+    //.end(done); // basic done to close test case
+    .end((error) => { // expanded end to test case - check saved user details...
+      // check for error with test case
+      if (error) {
+        return done(error); // simply return error to end test case
+      }
+
+      // if no error returned - check values saved
+      User.findOne({email}).then((user) => { // find email saved in db
+        expect(user).toExist(); // user should exist - saved in db
+        expect(user.password).toNotBe(password); // password should not match password in db - hashed in db
+        done();
+      });
+    });
+  });
+
+  // test case - check email or password structure is invalid...
+  it('should return error for invalid requests', (done) => {
+    request(app)
+      .post('/users')
+      // send some poorly formed data - wrong email structure...
+      .send({
+        email: 'em237',
+        password: 'abc123'
+      })
+      .expect(400) // should return a status code for the error
+      .end(done); // call done to end test case
+  });
+
+  // test case - check email entered by user already exists in the DB
+  it('should not create a new user as email already exists', (done) => {
+    request(app)
+      .post('/users')
+      // send existing email from dummy data
+      .send({
+        email: users[0].email,
+        password: 'abcd1234'
+      })
+      .expect(400) // should rerurn a status code of 400 for the error
+      .end(done); // call done to end the test case
+  });
+
 });
