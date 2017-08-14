@@ -286,7 +286,7 @@ describe('POST /users', () => {
         expect(user).toExist(); // user should exist - saved in db
         expect(user.password).toNotBe(password); // password should not match password in db - hashed in db
         done();
-      });
+      }).catch((error) => done(error));
     });
   });
 
@@ -315,5 +315,65 @@ describe('POST /users', () => {
       .expect(400) // should rerurn a status code of 400 for the error
       .end(done); // call done to end the test case
   });
+});
 
+// test POST route for /users/login
+describe('POST /users/login', () => {
+  // test case - user login with auth token response
+  it('should login the user and response with auth token', (done) => {
+    request(app)
+      .post('/users/login')
+      // send data from 2nd seed dummy user
+      .send({
+        email: users[1].email,
+        password: users[1].password
+      })
+      .expect(200) // should return a 200 status code for OK
+      .expect((res) => {
+        expect(res.headers['x-auth']).toExist(); // x-auth should be available in the response headers
+      })
+      .end((error, res) => { // add custom end - check for error and check user in db
+        if (error) {
+          return done(error); // return done for any errors
+        }
+
+        // if no errors - find user by id - user id from 2nd seed dummay user
+        User.findById(users[1]._id).then((user) => {
+          // check user tokens array includes at least the following properties
+          expect(user.tokens[0]).toInclude({
+            access: 'auth',
+            token: res.headers['x-auth']
+          });
+          done();
+        }).catch((error) => done(error));
+      });
+  });
+
+  // test case - invalid login - no user &c. found in db...
+  // test case - invalid login - no user &c. found in db...
+  it('should reject the user login due to invalid credentials...', (done) => {
+    request(app)
+      .post('/users/login')
+      // send an invalid password to test validation...
+      .send({
+        email: users[1].email,
+        password: 'password1234567'
+      })
+      .expect(400) // should return a 400 status code for error
+      .expect((res) => {
+        expect(res.headers['x-auth']).toNotExist(); // x-auth should not be available in the response headers
+      })
+      .end((error, res) => { // add custom end - check for error and check user in db
+        if (error) {
+          return done(error); // return done for any errors
+        }
+
+        // if no errors - find user by id - user id from 2nd seed dummay user
+        User.findById(users[1]._id).then((user) => {
+          // check user tokens array includes at least the following properties
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((error) => done(error));
+      });
+  });
 });
