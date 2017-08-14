@@ -102,7 +102,7 @@ UserSchema.pre('save', function(next) {
   // check if password is modified - if yes, then hash and salt is required
   if (user.isModified('password')) {
     // hash and salt password - before running save
-    bcrypt.genSalt(15, (error, salt) => { // generate salt
+    bcrypt.genSalt(10, (error, salt) => { // generate salt
       // hash password with salt
       bcrypt.hash(user.password, salt, (error, hash) => {
         // update user document with the hashed and salted password

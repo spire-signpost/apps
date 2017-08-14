@@ -18,27 +18,12 @@ const {ObjectID} = require('mongodb'); // ObjectID property from MongoDB object
 // local files
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo-model');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
-// update dummy todo items with test ID name:value pair property
-const todos = [
-  {
-    _id: new ObjectID(),
-    text: 'a todo item...'
-  },
-  {
-    _id: new ObjectID(),
-    text: 'another todo doc item...',
-    completed: true,
-    completedAt: 230797
-  }
-];
-
-// before a describe block is executed - wipe existing todo items stored in data store - add dummy data objects
-beforeEach((done) => {
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(todos);
-  }).then(() => done());
-});
+// wipe users and then add dummy data for testing
+beforeEach(populateUsers);
+// before a describe block is executed - wipe todo items stored in data store - add dummy data objects
+beforeEach(populateTodos);
 
 /*
   test routes
