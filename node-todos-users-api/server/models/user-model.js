@@ -57,7 +57,7 @@ UserSchema.methods.toJSON = function () {
 
 // add custom method to UserSchema objects - needs standard function syntax to provide `this` keyword
 UserSchema.methods.generateAuthToken = function () {
-  var user = this; // provides access to a document - the document this method was called against...
+  var user = this;
   // get access value from tokens in schema
   var access = 'auth';
   // create token for user from schema
@@ -72,8 +72,7 @@ UserSchema.methods.generateAuthToken = function () {
 
 // model method for token authentication - statics defines method as a models method
 UserSchema.statics.findByToken = function (token) {
-  // user model = `this` binding - because this is a model method...
-  var User = this;
+  var user = this;
   // store decoded jwt values
   var decoded;
 
@@ -88,16 +87,42 @@ UserSchema.statics.findByToken = function (token) {
   }
 
   // return promise to query (i.e. in server.js) for requested user values
-  return User.findOne({
+  return user.findOne({
     _id: decoded._id,
     'tokens.token': token, //quotation marks required due to period in tokens.token
     'tokens.access': 'auth'
   });
 };
 
+// static for a model method - standard function call to use `this`
+UserSchema.statics.findByCredentials = function (email, password) {
+  var User = this;
+  // query db for user with passed email - then verify password...
+  return User.findOne({email}).then((user) => {
+    // check if user exists
+    if (!user) {
+      // reject the promise if no user exists
+      return Promise.reject();
+    }
+
+    // return Promise for user found in db
+    return new Promise((resolve, reject) => {
+      // resolve Promise for user found...3 args expected
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          // if response is sent for user
+          resolve(user); // resolve the promise
+        } else {
+          // handle the error from the request
+          reject() // reject the promise - sends a 400 status code
+        }
+      });
+    });
+  });
+};
+
 // run some code before the schema executes save...e.g. hash passwords before save
 UserSchema.pre('save', function(next) {
-  // access document
   var user = this;
   // check if password is modified - if yes, then hash and salt is required
   if (user.isModified('password')) {

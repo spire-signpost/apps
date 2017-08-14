@@ -162,8 +162,10 @@ app.patch('/todos/:id', (req, res) => {
 
 /*
   API routes - USERS
-  - GET /users/me
+  - GET
+    - /users/me
   - POST
+    - /users, /users/login
 */
 
 app.get('/users/me', authenticate, (req, res) => {
@@ -185,6 +187,24 @@ app.post('/users', (req, res) => {
     }).catch((error) => {
       res.status(400).send(error);
     })
+});
+
+// POST route for user login - /users/login
+app.post('/users/login', (req, res) => {
+  // pick data for email and password from request body
+  var body = _.pick(req.body, ['email', 'password']);
+
+  // find the user by email and password - use return user object
+  User.findByCredentials(body.email, body.password).then((user) => {
+    // get a new token for the user - use abstracted function created for user save...
+    return user.generateAuthToken().then((token) => {
+      // set the header to x-auth with token, and send response body back as `user`
+      res.header('x-auth', token).send(user);
+    });
+  }).catch((error) => {
+    // tell user they were unable to login...
+    res.status(400).send(); // send status of 400 for error...
+  });
 });
 
 // set port for server
