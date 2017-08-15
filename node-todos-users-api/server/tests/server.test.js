@@ -350,7 +350,6 @@ describe('POST /users/login', () => {
   });
 
   // test case - invalid login - no user &c. found in db...
-  // test case - invalid login - no user &c. found in db...
   it('should reject the user login due to invalid credentials...', (done) => {
     request(app)
       .post('/users/login')
@@ -374,6 +373,35 @@ describe('POST /users/login', () => {
           expect(user.tokens.length).toBe(0);
           done();
         }).catch((error) => done(error));
+      });
+  });
+});
+
+// test DELETE route for /users/me/token
+describe('DELETE /users/me/token', () => {
+  // test case - remove auth token on logout
+  it('should delete auth token on user logout', (done) => {
+    // need seed data to test user - auth token from seed, then logout...users[0] token
+    request(app)
+      .delete('/users/me/token')
+      // set token to seed dummy data - first user, first tokens array and then token
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200) // should return a 200 code for OK
+      // call end function with custom assertion
+      .end((error, res) => {
+        // add error check - call done if error
+        if (error) {
+          return done(error);
+        }
+
+        // add custom assertion - query db for user by id
+        User.findById(users[0]._id).then((user) => {
+          // assertion - check user tokens array = 0 (token has been deleted)
+          expect(user.tokens.length).toBe(0);
+          // call done for the test case
+          done();
+        }).catch((error) => done(error));
+
       });
   });
 });
