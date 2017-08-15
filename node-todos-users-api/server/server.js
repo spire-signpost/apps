@@ -166,6 +166,8 @@ app.patch('/todos/:id', (req, res) => {
     - /users/me
   - POST
     - /users, /users/login
+  - DELETE
+    - /users/me/token
 */
 
 app.get('/users/me', authenticate, (req, res) => {
@@ -204,6 +206,18 @@ app.post('/users/login', (req, res) => {
   }).catch((error) => {
     // tell user they were unable to login...
     res.status(400).send(); // send status of 400 for error...
+  });
+});
+
+// DELETE route for user logout - /users/me/token
+app.delete('/users/me/token', authenticate, (req, res) => { // use authenticate to make the route private
+  // delete token set in the authentication middleware - access user via req.user as the user is already authenticated...
+  req.user.removeToken(req.token).then(() => { // call instance method to abstract deletion of token
+    // respond with 200 status code - OK
+    res.status(200).send();
+  }, () => { // second callback to then()
+    // respond with 400 status code for error &c.
+    res.status(400).send();
   });
 });
 

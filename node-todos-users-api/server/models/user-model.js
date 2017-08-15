@@ -70,6 +70,22 @@ UserSchema.methods.generateAuthToken = function () {
   });
 };
 
+// custom instance method - pass token to delete
+UserSchema.methods.removeToken = function (token) {
+  // lowercase `this` for instance method
+  var user = this;
+
+  // call update() on object to update - pass updates object
+  return user.update({
+    // specify what to `pull` from db - pull fro tokens array
+    $pull: {
+      tokens: {
+        token: token
+      }
+    }
+  });
+};
+
 // model method for token authentication - statics defines method as a models method
 UserSchema.statics.findByToken = function (token) {
   var user = this;

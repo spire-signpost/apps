@@ -67,3 +67,15 @@ Features include,
   * update user model to find a user with credentials
   * generate and return auth token
   * test with postman
+
+#### v0.9.1 - add test cases for POST /users/login
+  * update `server.test.js` with two test cases
+  * test for valid login and return auth token
+  * test for invalid login
+  * test with mocha, expect, and supertest
+
+#### v1.0 - add DELETE route to logout user
+  * add DELETE route to `server.js`
+  * logout authenticated user by removing token from db
+  * add authentication check to route
+  * test with postman
