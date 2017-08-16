@@ -44,11 +44,13 @@ app.use(bodyParser.json());
   - DELETE
   - PATCH
 */
+
 // POST route for todo items
-app.post('/todos', (req, res) => { // route url for all todo items - use for post and get...
+app.post('/todos', authenticate, (req, res) => { // route url for all todo items - use for post and get...
   // create todo item from model
   var todo = new Todo({
-    text: req.body.text // specify text for each todo item
+    text: req.body.text, // specify text for each todo item
+    author: req.user._id // add user id for authenticated user - add privacy to route...
   });
 
   todo.save().then((doc) => {
@@ -60,8 +62,11 @@ app.post('/todos', (req, res) => { // route url for all todo items - use for pos
 });
 
 // GET route for todo items
-app.get('/todos', (req, res) => {
-  Todo.find().then((todos) => { // promised resolved with all of the todos from the db
+app.get('/todos', authenticate, (req, res) => { // authenticate - check x-auth token used to fetch todos
+  // first check for todo items that match the authenticated user...
+  Todo.find({
+    author: req.user._id
+  }).then((todos) => { // promised resolved with all of the todos from the db
     res.send({ //response - send data back from get route - all of the todos
       todos // add todos array to object - update and modify object as needed instead of just sending array response...
     });

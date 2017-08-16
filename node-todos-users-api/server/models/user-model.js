@@ -88,7 +88,8 @@ UserSchema.methods.removeToken = function (token) {
 
 // model method for token authentication - statics defines method as a models method
 UserSchema.statics.findByToken = function (token) {
-  var user = this;
+  // uppercase User for model method
+  var User = this;
   // store decoded jwt values
   var decoded;
 
@@ -103,7 +104,7 @@ UserSchema.statics.findByToken = function (token) {
   }
 
   // return promise to query (i.e. in server.js) for requested user values
-  return user.findOne({
+  return User.findOne({
     _id: decoded._id,
     'tokens.token': token, //quotation marks required due to period in tokens.token
     'tokens.access': 'auth'
@@ -112,6 +113,7 @@ UserSchema.statics.findByToken = function (token) {
 
 // static for a model method - standard function call to use `this`
 UserSchema.statics.findByCredentials = function (email, password) {
+  // uppercase User for model method
   var User = this;
   // query db for user with passed email - then verify password...
   return User.findOne({email}).then((user) => {

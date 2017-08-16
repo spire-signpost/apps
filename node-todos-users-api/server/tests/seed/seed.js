@@ -37,13 +37,15 @@ const users = [{
 const todos = [
   {
     _id: new ObjectID(),
-    text: 'a todo item...'
+    text: 'a todo item...',
+    author: userIdOne
   },
   {
     _id: new ObjectID(),
     text: 'another todo doc item...',
     completed: true,
-    completedAt: 230797
+    completedAt: 230797,
+    author: userIdTwo
   }
 ];
 

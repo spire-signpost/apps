@@ -43,6 +43,7 @@ describe('POST /todos', () => {
     // use Supertest to test POST - pass app object
     request(app)
       .post('/todos') // call post method from app object - i.e. call api route
+      .set('x-auth', users[0].tokens[0].token)
       .send({
         text // ES6 shortcut for text: text
       })
@@ -67,6 +68,7 @@ describe('POST /todos', () => {
   it('should not create a todo item with invalid data', (done) => {
     request(app)
       .post('/todos')
+      .set('x-auth', users[0].tokens[0].token)
       .send({}) // send empty data to post route
       .expect(400) // expect status code 400
       .end((error, res) => {
@@ -89,9 +91,10 @@ describe('GET /todos', () => {
   it('should GET all todo items...dummy data found', (done) => {
     request(app)
       .get('/todos') // specify api url
+      .set('x-auth', users[0].tokens[0].token)
       .expect(200) // check status code - 200 for OK
       .expect((res) => { // custom assertion
-        expect(res.body.todos.length).toBe(2);
+        expect(res.body.todos.length).toBe(1); // todo items needs to match total in db for authenticated user
       })
       .end(done);
   });
