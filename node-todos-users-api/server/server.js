@@ -76,7 +76,7 @@ app.get('/todos', authenticate, (req, res) => { // authenticate - check x-auth t
 });
 
 // GET route with parameter - then query DB for passed ID
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => { // authenticate - check user is logged in, and give access to user via request object...
   // get params ID from req
   var params_id = req.params.id;
   console.log(params_id);
@@ -87,8 +87,11 @@ app.get('/todos/:id', (req, res) => {
     return res.status(404).send();
   }
 
-  // test find for GET route with params 0 e.g. ID
-  Todo.findById(params_id).then((todo) => {
+  // test find for GET route with user id and author - prevents accessing other user's todo items by id
+  Todo.findOne({
+    _id: params_id,
+    author: req.user._id
+  }).then((todo) => {
     // check if return data available
     if (!todo) {
       return res.status(404).send();
@@ -103,7 +106,7 @@ app.get('/todos/:id', (req, res) => {
 });
 
 // DELETE route for single doc with ID
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => { // add authenication to route
   // get params ID from req
   var params_id = req.params.id;
   console.log(params_id);
@@ -114,8 +117,11 @@ app.delete('/todos/:id', (req, res) => {
     return res.status(404).send();
   }
 
-  // find doc by ID and remove from DB
-  Todo.findByIdAndRemove(params_id).then((todo) => {
+  // find doc by id and author - remove from DB
+  Todo.findOneAndRemove({
+    _id: params_id,
+    author: req.user._id
+  }).then((todo) => {
     // check if return data available
     if (!todo) {
       return res.status(404).send();
@@ -128,7 +134,7 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 // PATCH route for single doc with ID
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => { // add authentication for x-auth token
   // get params ID from req
   var params_id = req.params.id;
   console.log(params_id);
@@ -152,8 +158,11 @@ app.patch('/todos/:id', (req, res) => {
     body.completedAt = null;
   }
 
-  // update the requested doc in the db - using Mongoose method, findByIdAndUpdate()
-  Todo.findByIdAndUpdate(params_id, {$set: body}, {new: true}).then((todo) => { // MongoDB update - set object to body, and return the new doc object - new: true (mongoose naming for returnOriginal)
+  // update the requested doc in the db for id and author - using Mongoose method, findOneAndUpdate()
+  Todo.findOneAndUpdate({
+      _id: params_id,
+      author: req.user._id
+    }, {$set: body}, {new: true}).then((todo) => { // MongoDB update - set object to body, and return the new doc object - new: true (mongoose naming for returnOriginal)
     // check todo object exists - return 404 for not found
     if (!todo) {
       return res.status(404).send();

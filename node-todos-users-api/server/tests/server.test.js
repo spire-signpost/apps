@@ -106,12 +106,23 @@ describe('GET /todos/:id', () => {
   it('should return a doc for a todo item...', (done) => { // done required due to async test...
     request(app)
       // use first object.id from dummy todos array - convert ObjectID to string with toHexString() method
-      .get(`/todos/${todos[1]._id.toHexString()}`)
+      .get(`/todos/${todos[0]._id.toHexString()}`)
+      .set('x-auth', users[0].tokens[0].token) // set x-auth token for specified user
       .expect(200) // assert - status code to match OK 200
       .expect((res) => { // assert that return body matches - e.g. text property matches return
-        expect(res.body.todo.text).toBe(todos[1].text);
+        expect(res.body.todo.text).toBe(todos[0].text);
       })
       .end(done); // call end and pass done to finish test case
+  });
+
+  // test case - check logged in user can't access another user's todo items
+  it('should not return another user\'s doc', (done) => {
+    request(app)
+      // try getting second todo item from seed data - created by second user...
+      .get(`/todos/${todos[1]._id.toHexString()}`)
+      .set('x-auth', users[0].tokens[0].token) // user first user's token
+      .expect(404)
+      .end(done);
   });
 
   // test case - route with params - 404 status return for doc not found
@@ -120,6 +131,7 @@ describe('GET /todos/:id', () => {
 
     request(app)
       .get(`/todos/${hexId}`) // GET route to test with param ID
+      .set('x-auth', users[0].tokens[0].token) // set x-auth token for specified user
       .expect(404) // assert - status code should be 404
       .end(done); // call end and pass done to finish test case
   });
@@ -128,6 +140,7 @@ describe('GET /todos/:id', () => {
   it('should return a 404 status code for non-valid &c. ObjectID', (done) => { // pass in a non-object ID for testing
     request(app)
       .get('/todos/abc123def') // pass in test invalid string - ObjectID has v. specific pattern
+      .set('x-auth', users[0].tokens[0].token) // set x-auth token for specified user
       .expect(404)
       .end(done);
   });
@@ -142,6 +155,7 @@ describe('DELETE /todos/:id', () => {
 
     request(app)
       .delete(`/todos/${hexId}`) // remove the specified doc by id
+      .set('x-auth', users[1].tokens[0].token) // set x-auth token for specified user
       .expect(200) // assert a 200 status code for the successful doc deletion
       .expect((res) => { // add custom assertion
         expect(res.body.todo._id).toBe(hexId); // assert that response body todo doc id matches the hexId
@@ -159,12 +173,35 @@ describe('DELETE /todos/:id', () => {
       });
   });
 
+  // test case - check user can't delete todo item they do no own...
+  it('should not delete a todo item they do no own', (done) => {
+    // doc id should not be owned by user id in test case...
+    var hexId = todos[0]._id.toHexString(); // doc's author should not match user id -
+
+    request(app)
+      .delete(`/todos/${hexId}`) // remove the specified doc by id
+      .set('x-auth', users[1].tokens[0].token) // set x-auth token for specified user
+      .expect(404) // assert a 200 status code for the successful doc deletion
+      .end((error, res) => { // finish request
+        if (error) { // handle error
+          return done(error); // if error exists simply return the request as done...
+        }
+
+        // find doc id in db
+        Todo.findById(hexId). then((todo) => {
+          expect(todo).toExist(); // check that doc id does exist in db - doc not deleted by non-author
+          done(); // call done and finish async all
+        }).catch((error) => done(error)); // catch any error for async call - return done if error caught...
+      });
+  });
+
   // test case - check return status code for doc not found in DB
   it('should return a 404 status code for doc not found', (done) => {
     var hexID = new ObjectID().toHexString();
 
     request(app)
       .delete(`/todos/${hexID}`) // DELETE route to test with param ID
+      .set('x-auth', users[1].tokens[0].token) // set x-auth token for specified user
       .expect(404) // assert - status code should be 404
       .end(done); // call end and pass done to finish test case
   });
@@ -173,6 +210,7 @@ describe('DELETE /todos/:id', () => {
   it('should return a 404 status code for invalid ObjectID...', (done) => {
     request(app)
       .delete('/todos/abc123def') // pass in test invalid string - ObjectID has v. specific pattern
+      .set('x-auth', users[1].tokens[0].token) // set x-auth token for specified user
       .expect(404)
       .end(done);
   });
@@ -190,6 +228,7 @@ describe('PATCH /todos/:id', () => {
     // setup test with assertions
     request(app)
       .patch(`/todos/${hexId}`)
+      .set('x-auth', users[0].tokens[0].token) // set x-auth token for specified user
       .send({
         completed: true,
         text // ES6 shortcute for name:value pair
@@ -203,6 +242,25 @@ describe('PATCH /todos/:id', () => {
       .end(done);
   });
 
+  //test case - check user can't update todo item they do not own
+  it('should not patch and update the todo item authored by another user', (done) => {
+    // get ID from dummy todos object - first object
+    var hexId = todos[0]._id.toHexString();
+    // text for testing PATCH update
+    var text = 'some test new text...';
+
+    // setup test with assertions
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .set('x-auth', users[1].tokens[0].token) // set x-auth token for specified user
+      .send({
+        completed: true,
+        text // ES6 shortcute for name:value pair
+      })
+      .expect(404) // user should not be able to update the requested todo item
+      .end(done);
+  });
+
   // test case - check completedAt relative to complete property
   it('should reset and clear completedAt property when todo item is not completed', (done) => {
     // get ID from dummy todos object - second object
@@ -213,6 +271,7 @@ describe('PATCH /todos/:id', () => {
     // setup test with assertions
     request(app)
       .patch(`/todos/${hexId}`)
+      .set('x-auth', users[1].tokens[0].token) // set x-auth token for specified user
       .send({
         completed: false, // todo item not completed
         text // ES6 shortcute for name:value pair
@@ -343,7 +402,7 @@ describe('POST /users/login', () => {
         // if no errors - find user by id - user id from 2nd seed dummay user
         User.findById(users[1]._id).then((user) => {
           // check user tokens array includes at least the following properties
-          expect(user.tokens[0]).toInclude({
+          expect(user.tokens[1]).toInclude({
             access: 'auth',
             token: res.headers['x-auth']
           });
@@ -373,7 +432,7 @@ describe('POST /users/login', () => {
         // if no errors - find user by id - user id from 2nd seed dummay user
         User.findById(users[1]._id).then((user) => {
           // check user tokens array includes at least the following properties
-          expect(user.tokens.length).toBe(0);
+          expect(user.tokens.length).toBe(1);
           done();
         }).catch((error) => done(error));
       });

@@ -86,8 +86,9 @@ Features include,
   * test with postman
 
 #### v1.1 - update TODO model and routes - add privacy
-  * add authentication to POST and GET routes for todos
+  * add authentication to GET, POST, DELETE, and PATCH routes for todos
   * add author to todo model - required
   * save todo with author id set to user
+  * check user can only update todos they created
   * update test cases
   * test with mocha, expect, and supertest

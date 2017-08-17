@@ -30,7 +30,11 @@ const users = [{
 }, {
   _id: userIdTwo,
   email: 'tester2@test.com',
-  password: 'userpass'
+  password: 'userpass',
+  tokens: [{
+    access: 'auth',
+    token: jwt.sign({_id: userIdTwo, access: 'auth'}, 'salted').toString()
+  }]
 }];
 
 // update dummy todo items with test ID name:value pair property
