@@ -1,6 +1,6 @@
-### Readme - Apps - Node Todos API
+### Readme - Apps - Node Notes API
 
-A basic Todos API with Node.js.
+A basic API with Node.js for a simple notes app with user authentication.
 
 Run app locally,
 
@@ -22,6 +22,7 @@ npm test
 npm run test-watch
 ```
 
-API testing with Postman, e.g. install as a Chrome app,
+API testing with Postman, e.g. install as a dekstop or Chrome app,
 
+  * https://www.getpostman.com/
   * chrome://apps/
