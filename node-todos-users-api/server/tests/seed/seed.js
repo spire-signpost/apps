@@ -25,25 +25,31 @@ const users = [{
   password: 'userpass1',
   tokens: [{
     access: 'auth',
-    token: jwt.sign({_id: userIdOne, access: 'auth'}, 'salted').toString()
+    token: jwt.sign({_id: userIdOne, access: 'auth'}, process.env.SECRET_JWT).toString()
   }]
 }, {
   _id: userIdTwo,
   email: 'tester2@test.com',
-  password: 'userpass'
+  password: 'userpass',
+  tokens: [{
+    access: 'auth',
+    token: jwt.sign({_id: userIdTwo, access: 'auth'}, process.env.SECRET_JWT).toString()
+  }]
 }];
 
 // update dummy todo items with test ID name:value pair property
 const todos = [
   {
     _id: new ObjectID(),
-    text: 'a todo item...'
+    text: 'a todo item...',
+    author: userIdOne
   },
   {
     _id: new ObjectID(),
     text: 'another todo doc item...',
     completed: true,
-    completedAt: 230797
+    completedAt: 230797,
+    author: userIdTwo
   }
 ];
 

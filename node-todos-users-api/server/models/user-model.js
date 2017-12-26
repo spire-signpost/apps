@@ -61,7 +61,7 @@ UserSchema.methods.generateAuthToken = function () {
   // get access value from tokens in schema
   var access = 'auth';
   // create token for user from schema
-  var token = jwt.sign({_id: user._id.toHexString(), access}, 'salted').toString(); // temporary secret value
+  var token = jwt.sign({_id: user._id.toHexString(), access}, process.env.SECRET_JWT).toString(); // temporary secret value
   // update tokens array in schema - user will now be generated with the created token values...
   user.tokens.push({access, token});
   // save user - returns promise in server.js where it will be called and used...
@@ -88,13 +88,14 @@ UserSchema.methods.removeToken = function (token) {
 
 // model method for token authentication - statics defines method as a models method
 UserSchema.statics.findByToken = function (token) {
-  var user = this;
+  // uppercase User for model method
+  var User = this;
   // store decoded jwt values
   var decoded;
 
   // catch any errors for verify()
   try {
-    decoded = jwt.verify(token, 'salted'); // pass token to verify plus secret phrase for salting...
+    decoded = jwt.verify(token, process.env.SECRET_JWT); // pass token to verify plus secret phrase for salting...
 
   } catch (error) {
     return new Promise((resolve, reject) => {
@@ -103,7 +104,7 @@ UserSchema.statics.findByToken = function (token) {
   }
 
   // return promise to query (i.e. in server.js) for requested user values
-  return user.findOne({
+  return User.findOne({
     _id: decoded._id,
     'tokens.token': token, //quotation marks required due to period in tokens.token
     'tokens.access': 'auth'
@@ -112,6 +113,7 @@ UserSchema.statics.findByToken = function (token) {
 
 // static for a model method - standard function call to use `this`
 UserSchema.statics.findByCredentials = function (email, password) {
+  // uppercase User for model method
   var User = this;
   // query db for user with passed email - then verify password...
   return User.findOne({email}).then((user) => {
